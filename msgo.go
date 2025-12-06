@@ -63,6 +63,23 @@ var (
 	parseRe = regexp.MustCompile(`^\s*([+-]?(?:\d+)?\.?\d+)\s*([a-zA-Z]+)?\s*$`)
 )
 
+type unitDef struct {
+	dur   time.Duration
+	short string
+	long  string
+}
+
+var orderedUnits = []unitDef{
+	{dur: year, short: "y", long: "year"},
+	{dur: month, short: "mo", long: "month"},
+	{dur: week, short: "w", long: "week"},
+	{dur: day, short: "d", long: "day"},
+	{dur: hour, short: "h", long: "hour"},
+	{dur: minute, short: "m", long: "minute"},
+	{dur: second, short: "s", long: "second"},
+	{dur: millisecond, short: "ms", long: "millisecond"},
+}
+
 // Parse converts a human string like "2h", "2 days", or "1y" into a time.Duration.
 // If no unit is provided, the value is interpreted as milliseconds.
 func Parse(s string) (time.Duration, error) {
@@ -102,28 +119,10 @@ func Parse(s string) (time.Duration, error) {
 	return duration, nil
 }
 
-// FormatShort renders a duration using the largest sensible unit and short suffixes.
+// FormatShort renders a duration using the largest sensible unit and, if needed, a remainder in the next unit.
+// Example: 2h30m => "2h 30m".
 func FormatShort(d time.Duration) string {
-	abs := absDuration(d)
-
-	switch {
-	case abs >= year:
-		return fmt.Sprintf("%dy", roundJS(float64(d)/float64(year)))
-	case abs >= month:
-		return fmt.Sprintf("%dmo", roundJS(float64(d)/float64(month)))
-	case abs >= week:
-		return fmt.Sprintf("%dw", roundJS(float64(d)/float64(week)))
-	case abs >= day:
-		return fmt.Sprintf("%dd", roundJS(float64(d)/float64(day)))
-	case abs >= hour:
-		return fmt.Sprintf("%dh", roundJS(float64(d)/float64(hour)))
-	case abs >= minute:
-		return fmt.Sprintf("%dm", roundJS(float64(d)/float64(minute)))
-	case abs >= second:
-		return fmt.Sprintf("%ds", roundJS(float64(d)/float64(second)))
-	default:
-		return fmt.Sprintf("%dms", d.Milliseconds())
-	}
+	return formatDuration(d, false)
 }
 
 // Format renders a duration in either the short or long style.
@@ -135,48 +134,64 @@ func Format(d time.Duration, long bool) string {
 	return FormatShort(d)
 }
 
-// FormatLong renders a duration using the largest sensible unit and long suffixes.
+// FormatLong renders a duration using the largest sensible unit and, if needed, a remainder in the next unit.
+// Example: 2h30m => "2 hours 30 minutes".
 func FormatLong(d time.Duration) string {
-	abs := absDuration(d)
-
-	switch {
-	case abs >= year:
-		return formatLongUnit(d, abs, year, "year")
-	case abs >= month:
-		return formatLongUnit(d, abs, month, "month")
-	case abs >= week:
-		return formatLongUnit(d, abs, week, "week")
-	case abs >= day:
-		return formatLongUnit(d, abs, day, "day")
-	case abs >= hour:
-		return formatLongUnit(d, abs, hour, "hour")
-	case abs >= minute:
-		return formatLongUnit(d, abs, minute, "minute")
-	case abs >= second:
-		return formatLongUnit(d, abs, second, "second")
-	default:
-		return fmt.Sprintf("%d ms", d.Milliseconds())
-	}
+	return formatDuration(d, true)
 }
 
-func formatLongUnit(d, abs, unit time.Duration, name string) string {
-	rounded := roundJS(float64(d) / float64(unit))
-	if abs >= unit+unit/2 {
-		name += "s"
+func formatDuration(d time.Duration, long bool) string {
+	if d == 0 {
+		if long {
+			return "0 milliseconds"
+		}
+		return "0ms"
 	}
-	return fmt.Sprintf("%d %s", rounded, name)
+
+	sign := ""
+	if d < 0 {
+		sign = "-"
+		if d == minDuration {
+			d = maxDuration
+		} else {
+			d = -d
+		}
+	}
+
+	for i, u := range orderedUnits {
+		last := i == len(orderedUnits)-1
+		if d >= u.dur || last {
+			primary := d / u.dur
+			remainder := d % u.dur
+
+			var parts []string
+			parts = append(parts, formatUnit(primary, u, long))
+
+			if remainder > 0 && !last {
+				next := orderedUnits[i+1]
+				secondary := remainder / next.dur
+				if secondary > 0 {
+					parts = append(parts, formatUnit(secondary, next, long))
+				}
+			}
+
+			return sign + strings.Join(parts, " ")
+		}
+	}
+
+	if long {
+		return "0 milliseconds"
+	}
+	return "0ms"
 }
 
-func roundJS(v float64) int64 {
-	return int64(math.Floor(v + 0.5))
-}
-
-func absDuration(d time.Duration) time.Duration {
-	if d >= 0 {
-		return d
+func formatUnit(count time.Duration, unit unitDef, long bool) string {
+	if long {
+		name := unit.long
+		if count != 1 {
+			name += "s"
+		}
+		return fmt.Sprintf("%d %s", count, name)
 	}
-	if d == minDuration {
-		return maxDuration
-	}
-	return -d
+	return fmt.Sprintf("%d%s", count, unit.short)
 }

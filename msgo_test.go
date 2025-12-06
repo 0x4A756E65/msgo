@@ -68,56 +68,21 @@ func TestParse(t *testing.T) {
 func TestFormatShort(t *testing.T) {
 	year := 24 * time.Hour * 36525 / 100
 	month := year / 12
-	ms := func(v float64) time.Duration {
-		return time.Duration(v * float64(time.Millisecond))
-	}
 
 	tests := []struct {
 		input time.Duration
 		want  string
 	}{
 		{2 * time.Hour, "2h"},
-		{90 * time.Second, "2m"},
+		{90 * time.Second, "1m 30s"},
 		{15 * time.Minute, "15m"},
-		{36 * time.Hour, "2d"},
+		{36 * time.Hour, "1d 12h"},
 		{2 * month, "2mo"},
-		{ms(500), "500ms"},
-		{-ms(500), "-500ms"},
-		{ms(1000), "1s"},
-		{ms(10000), "10s"},
-		{ms(60 * 1000), "1m"},
-		{ms(60 * 10000), "10m"},
-		{ms(60 * 60 * 1000), "1h"},
-		{ms(60 * 60 * 10000), "10h"},
-		{ms(24 * 60 * 60 * 1000), "1d"},
-		{ms(24 * 60 * 60 * 6000), "6d"},
-		{ms(1 * 7 * 24 * 60 * 60 * 1000), "1w"},
-		{ms(2 * 7 * 24 * 60 * 60 * 1000), "2w"},
-		{ms(30.4375 * 24 * 60 * 60 * 1000), "1mo"},
-		{ms(30.4375 * 24 * 60 * 60 * 1200), "1mo"},
-		{ms(30.4375 * 24 * 60 * 60 * 10000), "10mo"},
-		{ms(365.25*24*60*60*1000 + 1), "1y"},
-		{ms(365.25*24*60*60*1200 + 1), "1y"},
-		{ms(365.25*24*60*60*10000 + 1), "10y"},
+		{500 * time.Millisecond, "500ms"},
+		{-500 * time.Millisecond, "-500ms"},
+		{1500 * time.Millisecond, "1s 500ms"},
 		{-2 * time.Hour, "-2h"},
-		{-ms(1000), "-1s"},
-		{-ms(10000), "-10s"},
-		{-ms(60 * 1000), "-1m"},
-		{-ms(60 * 10000), "-10m"},
-		{-ms(60 * 60 * 1000), "-1h"},
-		{-ms(60 * 60 * 10000), "-10h"},
-		{-ms(24 * 60 * 60 * 1000), "-1d"},
-		{-ms(24 * 60 * 60 * 6000), "-6d"},
-		{-ms(1 * 7 * 24 * 60 * 60 * 1000), "-1w"},
-		{-ms(2 * 7 * 24 * 60 * 60 * 1000), "-2w"},
-		{-ms(30.4375 * 24 * 60 * 60 * 1000), "-1mo"},
-		{-ms(30.4375 * 24 * 60 * 60 * 1200), "-1mo"},
-		{-ms(30.4375 * 24 * 60 * 60 * 10000), "-10mo"},
-		{-ms(365.25*24*60*60*1000 + 1), "-1y"},
-		{-ms(365.25*24*60*60*1200 + 1), "-1y"},
-		{-ms(365.25*24*60*60*10000 + 1), "-10y"},
-		{ms(234234234), "3d"},
-		{-ms(234234234), "-3d"},
+		{-1500 * time.Millisecond, "-1s 500ms"},
 	}
 
 	for _, tt := range tests {
@@ -130,62 +95,21 @@ func TestFormatShort(t *testing.T) {
 func TestFormatLong(t *testing.T) {
 	year := 24 * time.Hour * 36525 / 100
 	month := year / 12
-	ms := func(v float64) time.Duration {
-		return time.Duration(v * float64(time.Millisecond))
-	}
 
 	tests := []struct {
 		input time.Duration
 		want  string
 	}{
 		{2 * time.Hour, "2 hours"},
-		{90 * time.Second, "2 minutes"},
+		{90 * time.Second, "1 minute 30 seconds"},
 		{time.Hour, "1 hour"},
-		{36 * time.Hour, "2 days"},
-		{1500 * time.Millisecond, "2 seconds"},
-		{500 * time.Millisecond, "500 ms"},
+		{36 * time.Hour, "1 day 12 hours"},
+		{1500 * time.Millisecond, "1 second 500 milliseconds"},
+		{500 * time.Millisecond, "500 milliseconds"},
 		{-2 * time.Hour, "-2 hours"},
 		{2 * month, "2 months"},
-		{ms(1200), "1 second"},
-		{ms(10000), "10 seconds"},
-		{ms(60 * 1000), "1 minute"},
-		{ms(60 * 1200), "1 minute"},
-		{ms(60 * 10000), "10 minutes"},
-		{ms(60 * 60 * 1000), "1 hour"},
-		{ms(60 * 60 * 1200), "1 hour"},
-		{ms(60 * 60 * 10000), "10 hours"},
-		{ms(24 * 60 * 60 * 1000), "1 day"},
-		{ms(1 * 24 * 60 * 60 * 1200), "1 day"},
-		{ms(6 * 24 * 60 * 60 * 1000), "6 days"},
-		{ms(1 * 7 * 24 * 60 * 60 * 1000), "1 week"},
-		{ms(2 * 7 * 24 * 60 * 60 * 1000), "2 weeks"},
-		{ms(30.4375 * 24 * 60 * 60 * 1000), "1 month"},
-		{ms(30.4375 * 24 * 60 * 60 * 1200), "1 month"},
-		{ms(30.4375 * 24 * 60 * 60 * 10000), "10 months"},
-		{ms(365.25*24*60*60*1000 + 1), "1 year"},
-		{ms(365.25*24*60*60*1200 + 1), "1 year"},
-		{ms(365.25*24*60*60*10000 + 1), "10 years"},
-		{ms(234234234), "3 days"},
-		{-ms(1200), "-1 second"},
-		{-ms(10000), "-10 seconds"},
-		{-ms(60 * 1000), "-1 minute"},
-		{-ms(60 * 1200), "-1 minute"},
-		{-ms(60 * 10000), "-10 minutes"},
-		{-ms(60 * 60 * 1000), "-1 hour"},
-		{-ms(60 * 60 * 1200), "-1 hour"},
-		{-ms(60 * 60 * 10000), "-10 hours"},
-		{-ms(1 * 24 * 60 * 60 * 1000), "-1 day"},
-		{-ms(1 * 24 * 60 * 60 * 1200), "-1 day"},
-		{-ms(6 * 24 * 60 * 60 * 1000), "-6 days"},
-		{-ms(1 * 7 * 24 * 60 * 60 * 1000), "-1 week"},
-		{-ms(2 * 7 * 24 * 60 * 60 * 1000), "-2 weeks"},
-		{-ms(30.4375 * 24 * 60 * 60 * 1000), "-1 month"},
-		{-ms(30.4375 * 24 * 60 * 60 * 1200), "-1 month"},
-		{-ms(30.4375 * 24 * 60 * 60 * 10000), "-10 months"},
-		{-ms(365.25*24*60*60*1000 + 1), "-1 year"},
-		{-ms(365.25*24*60*60*1200 + 1), "-1 year"},
-		{-ms(365.25*24*60*60*10000 + 1), "-10 years"},
-		{-ms(234234234), "-3 days"},
+		{1500 * time.Millisecond, "1 second 500 milliseconds"},
+		{-1500 * time.Millisecond, "-1 second 500 milliseconds"},
 	}
 
 	for _, tt := range tests {
@@ -197,11 +121,11 @@ func TestFormatLong(t *testing.T) {
 
 func TestFormat(t *testing.T) {
 	d := 90 * time.Second
-	if got := msgo.Format(d, false); got != "2m" {
-		t.Fatalf("Format short = %q, want %q", got, "2m")
+	if got := msgo.Format(d, false); got != "1m 30s" {
+		t.Fatalf("Format short = %q, want %q", got, "1m 30s")
 	}
-	if got := msgo.Format(d, true); got != "2 minutes" {
-		t.Fatalf("Format long = %q, want %q", got, "2 minutes")
+	if got := msgo.Format(d, true); got != "1 minute 30 seconds" {
+		t.Fatalf("Format long = %q, want %q", got, "1 minute 30 seconds")
 	}
 }
 

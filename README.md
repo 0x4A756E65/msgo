@@ -28,12 +28,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(d) // 2h30m0s
+fmt.Println(d) // 2h30m0s
 
-	// Format
-	fmt.Println(msgo.FormatShort(90 * time.Second)) // "2m"
-	fmt.Println(msgo.FormatLong(2 * time.Hour))     // "2 hours"
-	fmt.Println(msgo.Format(36*time.Hour, true))    // "2 days"
+// Format
+fmt.Println(msgo.FormatShort(90 * time.Second)) // "1m 30s"
+fmt.Println(msgo.FormatLong(2 * time.Hour))     // "2 hours"
+fmt.Println(msgo.Format(36*time.Hour, true))    // "1 day 12 hours"
 }
 ```
 
@@ -43,9 +43,8 @@ Milliseconds (`ms`, `msec`, `msecs`, `millisecond`, `milliseconds`), seconds, mi
 
 ## Formatting rules
 
-- Short: chooses the largest sensible unit and rounds (`90s` → `2m`, `234234234ms` → `3d`).
-- Long: same units but spelled out with simple pluralization (`1 hour`, `2 hours`).
-- Values smaller than a millisecond round to `0ms`/`0 ms` because `time.Duration` is integer-based.
+- Short/Long choose the largest sensible unit and include a remainder in the next smallest unit (`90s` → `1m 30s`; `2h30m` → `2 hours 30 minutes`).
+- Values smaller than a millisecond print as `0ms`/`0 milliseconds` because `time.Duration` is integer-based.
 
 ## Notes vs Vercel/ms
 
