@@ -122,6 +122,15 @@ func FormatShort(d time.Duration) string {
 	}
 }
 
+// Format renders a duration in either the short or long style.
+// This is a small convenience wrapper around FormatShort and FormatLong.
+func Format(d time.Duration, long bool) string {
+	if long {
+		return FormatLong(d)
+	}
+	return FormatShort(d)
+}
+
 // FormatLong renders a duration using the largest sensible unit and long suffixes.
 func FormatLong(d time.Duration) string {
 	abs := absDuration(d)
