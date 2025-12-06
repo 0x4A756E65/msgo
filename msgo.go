@@ -119,8 +119,7 @@ func Parse(s string) (time.Duration, error) {
 	return duration, nil
 }
 
-// ParseStrict mirrors the TypeScript parseStrict export.
-// In Go it behaves the same as Parse and exists for API parity with Vercel/ms.
+// ParseStrict behaves the same as Parse; provided for API parity with Vercel/ms.
 func ParseStrict(s string) (time.Duration, error) {
 	return Parse(s)
 }

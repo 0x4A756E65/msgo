@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/0x4A756E65/msgo"
@@ -32,11 +33,14 @@ func main() {
 			log.Printf("%-12q -> error: %v", raw, err)
 			continue
 		}
-		fmt.Printf("%-12q -> %-12s | %-18s | %v\n",
+		msVal := float64(d) / float64(time.Millisecond)
+		msStr := strconv.FormatFloat(msVal, 'f', -1, 64)
+
+		fmt.Printf("%-12q -> %-12s | %-18s | %sms\n",
 			raw,
 			msgo.FormatShort(d),
 			msgo.FormatLong(d),
-			d,
+			msStr,
 		)
 	}
 
