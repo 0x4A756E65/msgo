@@ -28,14 +28,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-fmt.Println(d) // 2h30m0s
+	fmt.Println(d) // 2h30m0s
 
-// Format
-fmt.Println(msgo.FormatShort(90 * time.Second)) // "1m 30s"
-fmt.Println(msgo.FormatLong(2 * time.Hour))     // "2 hours"
-fmt.Println(msgo.Format(36*time.Hour, true))    // "1 day 12 hours"
+	// Format
+	fmt.Println(msgo.FormatShort(90 * time.Second)) // "2m"
+	fmt.Println(msgo.FormatLong(2 * time.Hour))     // "2 hours"
+	fmt.Println(msgo.Format(36*time.Hour, true))    // "2 days"
 }
 ```
+
+## API
+
+- `Parse` / `ParseStrict`: parse strings like `"2 days"`, `"1.5h"`, or `"-.5w"` into `time.Duration` (milliseconds default).
+- `FormatShort`: short output that mirrors `ms(value)`/`format(value)` (`90s` → `2m`, `1500ms` → `2s`).
+- `FormatLong`: long output that mirrors `{ long: true }` (`1500ms` → `2 seconds`).
+- `Format(d, long)`: convenience wrapper to flip between short and long output in one call.
 
 ## Supported input units
 
@@ -43,14 +50,8 @@ Milliseconds (`ms`, `msec`, `msecs`, `millisecond`, `milliseconds`), seconds, mi
 
 ## Formatting rules
 
-- Short/Long choose the largest sensible unit and include a remainder in the next smallest unit (`90s` → `1m 30s`; `2h30m` → `2 hours 30 minutes`).
-- Values smaller than a millisecond print as `0ms`/`0 milliseconds` because `time.Duration` is integer-based.
-
-## Notes vs Vercel/ms
-
-- Go API: separate `Parse`, `FormatShort`, `FormatLong`, and a convenience `Format(d, long)`; no type-based overloading or `parseStrict`.
-- Errors are returned instead of throwing/returning `NaN`.
-- Input length guard: 1–100 characters.
+- Short/Long choose the largest sensible unit and round to the nearest whole unit (`90s` → `2m`; `5400s` → `2 hours`; `1500ms` → `2 seconds`).
+- Values smaller than a millisecond round to `0ms`/`0 ms` because `time.Duration` is integer-based.
 
 ## License
 
