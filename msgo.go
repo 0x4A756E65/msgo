@@ -119,8 +119,14 @@ func Parse(s string) (time.Duration, error) {
 	return duration, nil
 }
 
-// FormatShort renders a duration using the largest sensible unit and, if needed, a remainder in the next unit.
-// Example: 2h30m => "2h 30m".
+// ParseStrict mirrors the TypeScript parseStrict export.
+// In Go it behaves the same as Parse and exists for API parity with Vercel/ms.
+func ParseStrict(s string) (time.Duration, error) {
+	return Parse(s)
+}
+
+// FormatShort renders a duration using the largest sensible unit, rounding to the nearest whole unit.
+// Example: 90s => "2m".
 func FormatShort(d time.Duration) string {
 	return formatDuration(d, false)
 }
@@ -134,8 +140,8 @@ func Format(d time.Duration, long bool) string {
 	return FormatShort(d)
 }
 
-// FormatLong renders a duration using the largest sensible unit and, if needed, a remainder in the next unit.
-// Example: 2h30m => "2 hours 30 minutes".
+// FormatLong renders a duration using the largest sensible unit, rounding to the nearest whole unit.
+// Example: 90s => "2 minutes".
 func FormatLong(d time.Duration) string {
 	return formatDuration(d, true)
 }
@@ -143,55 +149,44 @@ func FormatLong(d time.Duration) string {
 func formatDuration(d time.Duration, long bool) string {
 	if d == 0 {
 		if long {
-			return "0 milliseconds"
+			return "0 ms"
 		}
 		return "0ms"
 	}
 
 	sign := ""
+	abs := d
 	if d < 0 {
 		sign = "-"
 		if d == minDuration {
-			d = maxDuration
+			abs = maxDuration
 		} else {
-			d = -d
+			abs = -d
 		}
 	}
 
 	for i, u := range orderedUnits {
 		last := i == len(orderedUnits)-1
-		if d >= u.dur || last {
-			primary := d / u.dur
-			remainder := d % u.dur
-
-			var parts []string
-			parts = append(parts, formatUnit(primary, u, long))
-
-			if remainder > 0 && !last {
-				next := orderedUnits[i+1]
-				secondary := remainder / next.dur
-				if secondary > 0 {
-					parts = append(parts, formatUnit(secondary, next, long))
-				}
-			}
-
-			return sign + strings.Join(parts, " ")
+		if abs < u.dur && !last {
+			continue
 		}
+
+		count := math.Round(float64(abs) / float64(u.dur))
+		if long {
+			if u.short == "ms" {
+				return fmt.Sprintf("%s%d ms", sign, int64(count))
+			}
+			name := u.long
+			if count != 1 {
+				name += "s"
+			}
+			return fmt.Sprintf("%s%d %s", sign, int64(count), name)
+		}
+		return fmt.Sprintf("%s%d%s", sign, int64(count), u.short)
 	}
 
 	if long {
-		return "0 milliseconds"
+		return "0 ms"
 	}
 	return "0ms"
-}
-
-func formatUnit(count time.Duration, unit unitDef, long bool) string {
-	if long {
-		name := unit.long
-		if count != 1 {
-			name += "s"
-		}
-		return fmt.Sprintf("%d %s", count, name)
-	}
-	return fmt.Sprintf("%d%s", count, unit.short)
 }

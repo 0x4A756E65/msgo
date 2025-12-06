@@ -74,15 +74,15 @@ func TestFormatShort(t *testing.T) {
 		want  string
 	}{
 		{2 * time.Hour, "2h"},
-		{90 * time.Second, "1m 30s"},
+		{90 * time.Second, "2m"},
 		{15 * time.Minute, "15m"},
-		{36 * time.Hour, "1d 12h"},
+		{36 * time.Hour, "2d"},
 		{2 * month, "2mo"},
 		{500 * time.Millisecond, "500ms"},
 		{-500 * time.Millisecond, "-500ms"},
-		{1500 * time.Millisecond, "1s 500ms"},
+		{1500 * time.Millisecond, "2s"},
 		{-2 * time.Hour, "-2h"},
-		{-1500 * time.Millisecond, "-1s 500ms"},
+		{-1500 * time.Millisecond, "-2s"},
 	}
 
 	for _, tt := range tests {
@@ -101,15 +101,15 @@ func TestFormatLong(t *testing.T) {
 		want  string
 	}{
 		{2 * time.Hour, "2 hours"},
-		{90 * time.Second, "1 minute 30 seconds"},
+		{90 * time.Second, "2 minutes"},
 		{time.Hour, "1 hour"},
-		{36 * time.Hour, "1 day 12 hours"},
-		{1500 * time.Millisecond, "1 second 500 milliseconds"},
-		{500 * time.Millisecond, "500 milliseconds"},
+		{36 * time.Hour, "2 days"},
+		{1500 * time.Millisecond, "2 seconds"},
+		{500 * time.Millisecond, "500 ms"},
 		{-2 * time.Hour, "-2 hours"},
 		{2 * month, "2 months"},
-		{1500 * time.Millisecond, "1 second 500 milliseconds"},
-		{-1500 * time.Millisecond, "-1 second 500 milliseconds"},
+		{1500 * time.Millisecond, "2 seconds"},
+		{-1500 * time.Millisecond, "-2 seconds"},
 	}
 
 	for _, tt := range tests {
@@ -121,11 +121,11 @@ func TestFormatLong(t *testing.T) {
 
 func TestFormat(t *testing.T) {
 	d := 90 * time.Second
-	if got := msgo.Format(d, false); got != "1m 30s" {
-		t.Fatalf("Format short = %q, want %q", got, "1m 30s")
+	if got := msgo.Format(d, false); got != "2m" {
+		t.Fatalf("Format short = %q, want %q", got, "2m")
 	}
-	if got := msgo.Format(d, true); got != "1 minute 30 seconds" {
-		t.Fatalf("Format long = %q, want %q", got, "1 minute 30 seconds")
+	if got := msgo.Format(d, true); got != "2 minutes" {
+		t.Fatalf("Format long = %q, want %q", got, "2 minutes")
 	}
 }
 
@@ -135,5 +135,18 @@ func TestFormatInvalidLength(t *testing.T) {
 	}
 	if _, err := msgo.Parse(strings.Repeat("x", 101)); err == nil {
 		t.Fatalf("Parse overly long string should error")
+	}
+}
+
+func TestParseStrict(t *testing.T) {
+	got, err := msgo.ParseStrict("1.5h")
+	if err != nil {
+		t.Fatalf("ParseStrict unexpected error: %v", err)
+	}
+	if want := 90 * time.Minute; got != want {
+		t.Fatalf("ParseStrict parsed %v, want %v", got, want)
+	}
+	if _, err := msgo.ParseStrict("bad input"); err == nil {
+		t.Fatalf("ParseStrict should error on invalid input")
 	}
 }
