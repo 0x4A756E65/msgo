@@ -66,6 +66,10 @@ var (
 // Parse converts a human string like "2h", "2 days", or "1y" into a time.Duration.
 // If no unit is provided, the value is interpreted as milliseconds.
 func Parse(s string) (time.Duration, error) {
+	if len(s) == 0 || len(s) > 100 {
+		return 0, fmt.Errorf("msgo: invalid length for %q", s)
+	}
+
 	match := parseRe.FindStringSubmatch(s)
 	if match == nil {
 		return 0, fmt.Errorf("msgo: invalid duration %q", s)
